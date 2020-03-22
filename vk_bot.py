@@ -20,6 +20,10 @@ class VkHelperBot(object):
         self.longpoll = VkLongPoll(self.vk_session)
 
         self.answering_machine = answering_machine
+        self.session_id_prefix = '0'
+
+    def get_session_id(self, event):
+        return int(self.session_id_prefix + str(event.user_id))
 
     def start(self):
         logger.info('Starting to listen for new messages.')
@@ -29,7 +33,8 @@ class VkHelperBot(object):
 
     def handle_message(self, event):
         message = event.text
-        answer = self.answering_machine.get_answer(message, ignore_unrecognized=True)
+        session_id = self.get_session_id(event)
+        answer = self.answering_machine.get_answer(message, session_id, ignore_unrecognized=True)
         logger.debug(f'For message - {str(message)}, got answer - {str(answer)}.')
         if answer is not None:
             self.vk_api.messages.send(user_id=event.user_id, message=answer, random_id=random.randint(1, 1000))
@@ -53,7 +58,6 @@ if __name__ == '__main__':
     try:
         answering_machine = AnsweringMachine(
             project_id=google_project_id,
-            session_id=random.randint(0, 9999),
             language_code='ru'
         )
         bot = VkHelperBot(

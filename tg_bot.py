@@ -28,6 +28,10 @@ class TelegramHelperBot(object):
         self.updater.dispatcher.add_handler(message_handler)
 
         self.answering_machine = answering_machine
+        self.session_id_prefix = '1'
+
+    def get_session_id(self, update):
+        return int(self.session_id_prefix + str(update.message.chat_id))
 
     def start(self):
         self.updater.start_polling()
@@ -39,7 +43,8 @@ class TelegramHelperBot(object):
 
     def handle_message(self, bot, update):
         message = update.message.text
-        answer = self.answering_machine.get_answer(message)
+        session_id = self.get_session_id(update)
+        answer = self.answering_machine.get_answer(message, session_id)
         logger.debug(f'For message - {str(message)}, got answer - {str(answer)}.')
         if answer is not None:
             bot.send_message(chat_id=update.message.chat_id, text=answer)
@@ -63,7 +68,6 @@ if __name__ == '__main__':
     try:
         answering_machine = AnsweringMachine(
             project_id=google_project_id,
-            session_id=random.randint(0, 9999),
             language_code='ru'
         )
         bot = TelegramHelperBot(
