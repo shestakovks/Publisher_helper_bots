@@ -6,17 +6,14 @@ import dialogflow_v2
 from dotenv import load_dotenv
 
 
-def load_intents_from_json(path_to_file):
-    with open(path_to_file) as intents_json:
-        intents = json.load(intents_json)
-    return intents
+def load_learning_data_from_json(path_to_file):
+    with open(path_to_file) as learning_json:
+        learning_dict = json.load(learning_json)
+    return learning_dict
 
 
-def create_intent(project_id, display_name, training_phrases_parts, message_texts):
+def create_intent(display_name, training_phrases_parts, message_texts):
     """Create an intent of the given intent type."""
-    intents_client = dialogflow_v2.IntentsClient()
-
-    parent = intents_client.project_agent_path(project_id)
     training_phrases = []
     for training_phrases_part in training_phrases_parts:
         part = dialogflow_v2.types.Intent.TrainingPhrase.Part(
@@ -32,20 +29,25 @@ def create_intent(project_id, display_name, training_phrases_parts, message_text
         display_name=display_name,
         training_phrases=training_phrases,
         messages=[message])
-
-    intents_client.create_intent(parent, intent)
-    print('Intent created: {}'.format(display_name))
+    return intent
 
 
-def create_intents(project_id, intents):
-    for display_name, intent_body in intents.items():
-        training_phrases_parts = intent_body['questions']
-        if isinstance(intent_body['answer'], list):
-            message_texts = intent_body['answer']
-        else:
-            message_texts = [intent_body['answer']]
+def create_intents(learning_dict):
+    intents = []
+    for display_name, intent_body in learning_dict.items():
+        if not isinstance(intent_body['answer'], list):
+            intent_body['answer'] = [intent_body['answer']]
+        intent = create_intent(display_name, intent_body['questions'], intent_body['answer'])
+        intents.append(intent)
+    return intents
 
-        create_intent(project_id, display_name, training_phrases_parts, message_texts)
+
+def load_intents(project_id, intents):
+    intents_client = dialogflow_v2.IntentsClient()
+    parent = intents_client.project_agent_path(project_id)
+    for intent in intents:
+        intents_client.create_intent(parent, intent)
+        print('Intent created: {}'.format(intent.display_name))
 
 
 def train_agent(project_id):
@@ -63,6 +65,7 @@ if __name__ == '__main__':
     load_dotenv()
     google_project_id = os.getenv('GOOGLE_PROJECT_ID')
 
-    intents_dict = load_intents_from_json(path_to_file)
-    create_intents(google_project_id, intents_dict)
+    learning_dict = load_learning_data_from_json(path_to_file)
+    intents = create_intents(learning_dict)
+    load_intents(google_project_id, intents)
     train_agent(google_project_id)
