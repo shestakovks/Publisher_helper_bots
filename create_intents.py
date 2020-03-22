@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -54,9 +55,14 @@ def train_agent(project_id):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path_to_file', help="Path to file with learning data.", type=str)
+    args = parser.parse_args()
+    path_to_file = args.path_to_file
+
     load_dotenv()
     google_project_id = os.getenv('GOOGLE_PROJECT_ID')
 
-    intents_dict = load_intents_from_json('intent_source.json')
+    intents_dict = load_intents_from_json(path_to_file)
     create_intents(google_project_id, intents_dict)
     train_agent(google_project_id)

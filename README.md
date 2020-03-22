@@ -44,7 +44,7 @@ Telegram and VK bots to help your company communicate with your customers or pos
 
 1. Locally
     1. To teach your DialogFlow Agent new intents, follow these steps:
-        - Fill intent_source.json file with learning information, using following format:
+        - Create json file with learning information, using following format:
         ```
         {
             "<THEME>": {
@@ -59,7 +59,8 @@ Telegram and VK bots to help your company communicate with your customers or pos
         }
         ```
         - Run following command:
-        ```$ python3 create_intents.py```
+
+        ```$ python3 create_intents.py <PATH_TO_YOUR_JSON_FILE>```
     2. To launch bots use following commands:
     ```
     $ python3 tg_bot.py
